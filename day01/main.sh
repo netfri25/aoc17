@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 INPUT_TARGET=${1:-./input}
 
 function main {
