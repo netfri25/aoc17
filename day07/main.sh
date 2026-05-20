@@ -40,8 +40,6 @@ function part1 {
 }
 
 function part2 {
-    echo "$FUNCNAME: TODO" 1>&2
-
     function rec_eval_node_sum {
         local node_name="$1"
 
@@ -50,7 +48,7 @@ function part2 {
             IFS=' '
             local children_text="${node_children["$node_name"]}"
             for child in $children_text; do
-                eval_node_sum "$child"
+                rec_eval_node_sum "$child"
             done
 
             local total="${node_value["$node_name"]}"
