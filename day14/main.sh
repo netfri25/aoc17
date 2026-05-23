@@ -18,12 +18,58 @@ function solve {
         done
     }
 
+    # part 1: count the amount of binary digits
     grep -o "1" <<< "$result" | wc -l
+
+    # part 2: count the amount of regions
+    count_regions "$result"
 }
 
-function part2 {
-    # TODO: collect all to some kind of an array, and count the regions using a flood fill algorithm
-    echo "$FUNCNAME: TODO" 1>&2
+function count_regions {
+    local i j width grid count nbors current
+    readarray -t grid < <(fold -w1 <<< "$1")
+
+    declare -a queue
+
+    (( width = 128, count = 0 ))
+    for ((i=0; i<width*width; i++)); do
+        if ((grid[i] == 1)); then
+            (( count++, j = 0 ))
+            queue=("$i")
+
+            until [[ -z "${queue[$j]}" ]]; do
+                (( current = queue[j] ))
+                (( grid[current] = 0 ))
+                nbors=()
+
+                if (((current&127) != 0)); then
+                    nbors+=($((current-1)))
+                fi
+
+                if (((current&127) != 127)); then
+                    nbors+=($((current+1)))
+                fi
+
+                if ((current >= width)); then
+                    nbors+=($((current-width)))
+                fi
+
+                if ((current + width < width*width)); then
+                    nbors+=($((current+width)))
+                fi
+
+                for nbor in "${nbors[@]}"; do
+                    if ((grid[nbor] == 1)); then
+                        queue+=($nbor)
+                    fi
+                done
+
+                (( j++ ))
+            done
+        fi
+    done
+
+    echo "$count"
 }
 
 function hash {
