@@ -12,15 +12,16 @@ function main {
 
 function parse {
     while IFS=": " read -r layer range; do
-        firewall["$layer"]="$range"
+        (( firewall[layer] = range ))
     done
 }
 
 function part1 {
-    local result=0
+    local result range
+    (( result = 0 ))
 
     for layer in "${!firewall[@]}"; do
-        local range="${firewall["$layer"]}"
+        (( range =  firewall[layer] ))
         if is_caught 0 "$layer" "$range"; then
             (( result += layer*range ))
         fi
@@ -40,10 +41,11 @@ function part2 {
 }
 
 function is_trip_non_safe {
+    local range
     local offset="$1"
 
     for layer in "${!firewall[@]}"; do
-        local range="${firewall["$layer"]}"
+        (( range = firewall[layer] ))
         if is_caught "$offset" "$layer" "$range"; then
             return 0
         fi
