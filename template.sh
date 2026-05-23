@@ -5,7 +5,7 @@ set -e
 INPUT_TARGET=${1:-./input}
 
 function main {
-    local input=$(cat $INPUT_TARGET)
+    local input=$(< "$INPUT_TARGET")
     part1 "$input"
     part2 "$input"
 }
