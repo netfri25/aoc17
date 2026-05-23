@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
 
-set -e
-
 D2B=({0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1}{0..1})
 
 INPUT_TARGET=${1:-./input}
 
 function main {
-    local input=$(cat $INPUT_TARGET)
-    part1 "$input"
-    part2 "$input"
+    local input=$(< $INPUT_TARGET)
+    solve "$input"
 }
 
-function part1 {
+function solve {
     local input="$1"
 
-    for i in {0..127}; do
-        hash "$input-$i"
-    done | grep -o "1" | wc -l
+    local result=${
+        for i in {0..127}; do
+            hash "$input-$i"
+        done
+    }
+
+    grep -o "1" <<< "$result" | wc -l
 }
 
 function part2 {
@@ -26,56 +27,62 @@ function part2 {
 }
 
 function hash {
-    readarray -t lengths < <(echo -n "$1" | od -An -v -t u1 -w1 | tr -d ' ')
+    local lengths_text="$1"
+    local lengths_text_len="${#1}"
+    declare -a lengths
+
+    local i value
+    for ((i=0; i<lengths_text_len; i++)); do
+        printf -v value "%d" "'${lengths_text:i:1}"
+        lengths+=("$value")
+    done
+
     lengths+=(17 31 73 47 23)
 
     local list=({0..255})
     local current_position=0
     local skip_size=0
-    local list_len="${#list[@]}"
 
-    local i
+    local length front back j index other temp
     for ((i=0; i<64; i++)); do
         for length in "${lengths[@]}"; do
-            reverse
-            current_position=$(((current_position + length + skip_size) % list_len))
-            skip_size=$(((skip_size + 1) % list_len))
+            # reverse in range
+            ((
+                front = current_position,
+                back = front + length - 1
+            ))
+
+            for ((j=0; j < length/2; j++)); do
+                ((
+                    index = front & 255,
+                    other = back  & 255,
+
+                    temp = list[index],
+                    list[index] = list[other],
+                    list[other] = temp,
+
+                    front++,
+                    back--
+                ))
+            done
+
+            ((
+                current_position += length + skip_size++,
+                current_position &= 255
+            ))
         done
     done
 
-    local chunk
+    local chunk byte offset
     for ((chunk=0; chunk<16; chunk++)); do
-        local byte=0
+        (( byte=0 ))
 
-        local offset
         for ((offset=0; offset<16; offset++)); do
-            local index=$((chunk * 16 + offset))
-            local value="${list["$index"]}"
-            byte=$((byte ^ value))
+            ((byte ^= list[chunk * 16 + offset]))
         done
 
-        echo "${D2B["$byte"]}"
+        echo -n "${D2B["$byte"]}"
     done
-}
-
-function reverse {
-    local front="$current_position"
-    local back="$((front + length - 1))"
-
-    local i
-    for ((i=0; i < length/2; i++)); do
-        local index="$((front % list_len))"
-        local other="$((back % list_len))"
-        swap
-        front="$((front + 1))"
-        back="$((back - 1))"
-    done
-}
-
-function swap {
-    local temp="${list["$index"]}"
-    list["$index"]="${list["$other"]}"
-    list["$other"]="$temp"
 }
 
 main
