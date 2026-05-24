@@ -6,8 +6,9 @@ declare -a firewall
 
 function main {
     parse < "$INPUT_TARGET"
-    part1
-    part2
+    time part1
+    echo
+    time part2
 }
 
 function parse {

@@ -6,8 +6,9 @@ INPUT_TARGET=${1:-./input}
 
 function main {
     local input=$(cat $INPUT_TARGET)
-    part1 $input
-    part2 $input
+    time part1 $input
+    echo
+    time part2 $input
 }
 
 function part1 {

@@ -18,8 +18,9 @@ declare -A node_sum
 function main {
     local input=$(cat $INPUT_TARGET)
     parse "$input"
-    part1
-    part2
+    time part1
+    echo
+    time part2
 }
 
 function parse {

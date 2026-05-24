@@ -6,7 +6,7 @@ INPUT_TARGET=${1:-./input}
 
 function main {
     local input=$(< $INPUT_TARGET)
-    solve "$input"
+    time solve "$input"
 }
 
 function solve {
