@@ -12,65 +12,62 @@ function main {
 function part1 {
     declare -a instructions inst
     declare -A regs
-    local temp result
+    local lhs rhs last_sound
 
     readarray -t instructions <<< "$1"
-    declare -i length="${#instructions[@]}"
+    declare -i value ip=0 length="${#instructions[@]}"
 
-    declare -i ip=0
-    while ((ip>=0 && ip<length)) && [[ -z "$result" ]]; do
-        inst=(${instructions["$ip"]})
-        result=${ run_inst ${inst[@]}; }
-        let ip++
+    while ((ip>=0 && ip<length)) && [[ -z "$last_sound" ]]; do
+        read -r inst lhs rhs <<< "${instructions["$ip"]}"
+        ((ip++))
+
+        case "$inst" in
+            snd)
+                value=${ fetch "$lhs"; }
+                pushd -n "$value" 1>/dev/null
+                ;;
+            set)
+                value=${ fetch "$rhs"; }
+                (( regs[$lhs] = value ))
+                ;;
+            add)
+                value=${ fetch "$rhs"; }
+                (( regs[$lhs] += value ))
+                ;;
+            mul)
+                value=${ fetch "$rhs"; }
+                (( regs[$lhs] *= value ))
+                ;;
+            mod)
+                value=${ fetch "$rhs"; }
+                (( regs[$lhs] %= value ))
+                ;;
+            rcv)
+                value=${ fetch "$lhs"; }
+                if ((value > 0)); then
+                    # print the recovered sound
+                    last_sound=${ dirs +1; }
+                    popd -n 1>/dev/null
+                    break
+                fi
+                ;;
+            jgz)
+                value=${ fetch "$rhs"; }
+                if [[ "${regs["$lhs"]}" -gt 0 ]]; then
+                    (( ip += value - 1 ))
+                fi
+                ;;
+            *)
+                echo "unknown instruction" 1>&2
+                exit 1
+        esac
     done
 
-    echo "$result"
+    echo "$last_sound"
 }
 
 function part2 {
     echo "$FUNCNAME: TODO" 1>&2
-}
-
-function run_inst {
-    declare -i value
-    case "$1" in
-        snd)
-            value=${ fetch "$2"; }
-            pushd -n "$value" 1>/dev/null
-            ;;
-        set)
-            value=${ fetch "$3"; }
-            (( regs[$2] = value ))
-            ;;
-        add)
-            value=${ fetch "$3"; }
-            (( regs[$2] += value ))
-            ;;
-        mul)
-            value=${ fetch "$3"; }
-            (( regs[$2] *= value ))
-            ;;
-        mod)
-            value=${ fetch "$3"; }
-            (( regs[$2] %= value ))
-            ;;
-        rcv)
-            value=${ fetch "$2"; }
-            if ((value > 0)); then
-                dirs +1 # print the recovered sound
-                popd -n 1>/dev/null
-            fi
-            ;;
-        jgz)
-            value=${ fetch "$3"; }
-            if (( regs[$2] > 0 )); then
-                (( ip += value - 1 ))
-            fi
-            ;;
-        *)
-            echo "unknown instruction: $1" 1>&2
-            exit 1
-    esac
 }
 
 function fetch {
